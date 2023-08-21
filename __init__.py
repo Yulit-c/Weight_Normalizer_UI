@@ -51,13 +51,6 @@ class WEIGHTNORMALIZER_SCENE_operator_properties(bpy.types.PropertyGroup):
         min=1,
     )
 
-    quantize_steps: IntProperty(
-        name="Quantize Steps",
-        description="",
-        default=10,
-        min=1,
-    )
-
     limit_weight_value: FloatProperty(
         name="Limit Weight Value",
         description="",
@@ -89,7 +82,6 @@ class WEIGHTNORMALIZER_OT_weight_normalizing_sequence(bpy.types.Operator):
         lock_active = props.lock_active
         target_group = props.target_vertex_group
         bone_count = props.limit_bone_count
-        steps = props.quantize_steps
         limit_value = props.limit_weight_value
 
         bpy.ops.object.vertex_group_limit_total(
@@ -98,11 +90,11 @@ class WEIGHTNORMALIZER_OT_weight_normalizing_sequence(bpy.types.Operator):
         bpy.ops.object.vertex_group_normalize_all(
             group_select_mode=target_group, lock_active=lock_active
         )
-        bpy.ops.object.vertex_group_quantize(
-            group_select_mode=target_group, steps=steps
-        )
         bpy.ops.object.vertex_group_clean(
             group_select_mode=target_group, limit=limit_value
+        )
+        bpy.ops.object.vertex_group_normalize_all(
+            group_select_mode=target_group, lock_active=lock_active
         )
 
         return {"FINISHED"}
@@ -134,10 +126,6 @@ class WEIGHTNORMALIZER_PT_operator_options(bpy.types.Panel):
         row = col.row(align=True)
         row.label(text="Bone Count")
         row.prop(props, "limit_bone_count", text="")
-
-        row = col.row(align=True)
-        row.label(text="Quantize_Steps")
-        row.prop(props, "quantize_steps", text="")
 
         row = col.row(align=True)
         row.label(text="Limit Weight Value")
