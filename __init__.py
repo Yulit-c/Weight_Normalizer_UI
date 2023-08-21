@@ -24,6 +24,7 @@ from bpy.props import (
 )
 from bpy.types import Context
 
+
 """---------------------------------------------------------
 ------------------------------------------------------------
     Property Group
@@ -46,14 +47,14 @@ class WEIGHTNORMALIZER_SCENE_operator_properties(bpy.types.PropertyGroup):
     limit_bone_count: IntProperty(
         name="Limit Bone Count",
         description="",
-        default=4,
+        default=8,
         min=1,
     )
 
     quantize_steps: IntProperty(
         name="Quantize Steps",
         description="",
-        default=4,
+        default=10,
         min=1,
     )
 
@@ -84,9 +85,7 @@ class WEIGHTNORMALIZER_OT_weight_normalizing_sequence(bpy.types.Operator):
             self.report({"ERROR"}, "Armature Object is not Selected")
             return {"CANCELLED"}
 
-        props: WEIGHTNORMALIZER_SCENE_operator_properties = (
-            context.scene.weight_normalizer
-        )
+        props = get_operator_properties(context)
         lock_active = props.lock_active
         target_group = props.target_vertex_group
         bone_count = props.limit_bone_count
@@ -105,9 +104,6 @@ class WEIGHTNORMALIZER_OT_weight_normalizing_sequence(bpy.types.Operator):
         bpy.ops.object.vertex_group_clean(
             group_select_mode=target_group, limit=limit_value
         )
-        bpy.ops.object.vertex_group_normalize_all(
-            group_select_mode=target_group, lock_active=lock_active
-        )
 
         return {"FINISHED"}
 
@@ -124,13 +120,12 @@ class WEIGHTNORMALIZER_PT_operator_options(bpy.types.Panel):
     bl_label = "Operator Settings"
     bl_space_type = "VIEW_3D"
     bl_region_type = "WINDOW"
-    bl_options = {"INSTANCED"}
     bl_ui_units_x = 14
 
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        props = context.scene.weight_normalizer
+        props = get_operator_properties(context)
 
         row = col.row(align=True)
         row.label(text="Target")
@@ -153,7 +148,7 @@ class WEIGHTNORMALIZER_PT_operator_options(bpy.types.Panel):
         row.prop(props, "lock_active", text="")
 
 
-def draw_operator_properties_ui(self, context):
+def draw_properties_ui(self, context):
     layout: bpy.types.UILayout = self.layout
 
     if context.mode == "PAINT_WEIGHT":
@@ -163,10 +158,22 @@ def draw_operator_properties_ui(self, context):
 
 
 def draw_operator(self, context):
-    layout = self.layout
+    layout: bpy.types.UILayout = self.layout
 
     if context.mode == "PAINT_WEIGHT":
         layout.operator(WEIGHTNORMALIZER_OT_weight_normalizing_sequence.bl_idname)
+
+
+"""---------------------------------------------------------
+------------------------------------------------------------
+    Function
+------------------------------------------------------------
+---------------------------------------------------------"""
+
+
+def get_operator_properties(context) -> WEIGHTNORMALIZER_SCENE_operator_properties:
+    props = context.scene.weight_normalizer
+    return props
 
 
 """---------------------------------------------------------
@@ -189,18 +196,17 @@ def register():
             pass
 
     bpy.types.Scene.weight_normalizer = PointerProperty(
-        name="Operator Parameters",
         type=WEIGHTNORMALIZER_SCENE_operator_properties,
     )
 
     bpy.types.VIEW3D_HT_tool_header.prepend(draw_operator)
-    bpy.types.VIEW3D_HT_tool_header.prepend(draw_operator_properties_ui)
+    bpy.types.VIEW3D_HT_tool_header.prepend(draw_properties_ui)
 
 
 def unregister():
     del bpy.types.Scene.weight_normalizer
 
-    bpy.types.VIEW3D_HT_tool_header.remove(draw_operator_properties_ui)
+    bpy.types.VIEW3D_HT_tool_header.remove(draw_properties_ui)
     bpy.types.VIEW3D_HT_tool_header.remove(draw_operator)
 
     for cls in CLASSES:
