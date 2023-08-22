@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "Weight_Normalizier_UI",
+    "name": "Weight_Normalizer_UI",
     "author": "Yu-Lit",
     "version": (0, 0, 1),
     "blender": (3, 3, 0),
